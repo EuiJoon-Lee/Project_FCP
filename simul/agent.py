@@ -19,40 +19,41 @@ class Agent:
 
     def calculate_profit(self, offer_pool, ask_pool, tobin, deviation, step):
         deviation = abs(deviation)
-        if tobin > deviation:
+        if tobin/100 > deviation:
             return None, None, None
+        else: 
+            profit_list = list()
+            offer_amount_list = list()
+            ask_amount_list = list()
+            for offer_amount in np.arange(1, self.asset[offer_pool.name], step):
+                ask_amount, total_fee, profit = self.Forex_Constant_Product(
+                    offer_pool, ask_pool, offer_amount, tobin, deviation)
+                
+                # print("ask_amount:", ask_amount, "\ttotal_fee:", total_fee, "\tprofit:", profit)
+                
+                if (deviation-total_fee) > 0:
+                    profit_list.append(profit)
+                    offer_amount_list.append(offer_amount)
+                    ask_amount_list.append(ask_amount)
+                else:
+                    break
 
-        profit_list = list()
-        offer_amount_list = list()
-        ask_amount_list = list()
-        for offer_amount in np.arange(1, self.asset[offer_pool.name], step):
-            ask_amount, total_fee, profit = self.Forex_Constant_Product(
-                offer_pool, ask_pool, offer_amount, tobin, deviation)
-            
-            # print("ask_amount:", ask_amount, "\ttotal_fee:", total_fee, "\tprofit:", profit)
-            
-            if profit > 0:
-                profit_list.append(profit)
-                offer_amount_list.append(offer_amount)
-                ask_amount_list.append(ask_amount)
-            else:
-                break
+            if len(profit_list) == 0:
+                return None, None, None
 
-        if len(profit_list) == 0:
-            return None, None, None
-
-        max_profit = max(profit_list)
-        max_offer_amount = offer_amount_list[profit_list.index(max_profit)]
-        max_ask_amount = ask_amount_list[profit_list.index(max_profit)]
-        return max_profit, max_offer_amount, max_ask_amount
+            max_profit = max(profit_list)
+            max_offer_amount = offer_amount_list[profit_list.index(max_profit)]
+            max_ask_amount = ask_amount_list[profit_list.index(max_profit)]
+            return max_profit, max_offer_amount, max_ask_amount
 
     def Forex_Constant_Product(self, offer_pool, ask_pool, offer_amount, tobin, deviation):
+        deviation = abs(deviation)
         result = (ask_pool.pool * ask_pool.rate * offer_amount) / \
             (ask_pool.pool * offer_pool.rate + ask_pool.rate * offer_amount)
         ask_amount = result - offer_amount*ask_pool.rate/offer_pool.rate*tobin
         total_fee = (offer_amount*ask_pool.rate/offer_pool.rate -
                      ask_amount)/(offer_amount*ask_pool.rate/offer_pool.rate)*100
-        profit = (deviation - total_fee)*ask_amount
+        profit = (deviation/100 - total_fee/100)*ask_amount
 
         if (total_fee > 0) and (ask_amount > 0):
             return ask_amount, total_fee, profit
@@ -60,9 +61,9 @@ class Agent:
             return None, None, None
 
 
-if __name__ == "__main__":
-    Kim = Agent(["KRT", "SDT", "UST"], [1000, 2000, 3000])
-
-    print(Kim.asset["KRT"])
-    print(Kim.asset["SDT"])
-    print(Kim.asset["UST"])
+#if __name__ == "__main__":
+#    Kim = Agent(["KRT", "SDT", "UST"], [1000, 2000, 3000])
+#
+#    print(Kim.asset["KRT"])
+#    print(Kim.asset["SDT"])
+#    print(Kim.asset["UST"])

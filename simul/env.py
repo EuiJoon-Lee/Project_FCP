@@ -1,6 +1,6 @@
 class Env:
-    def __init__(self, pool, rate, tobin, name):
-        self.default_pool = pool
+    def __init__(self, default_pool, pool, rate, tobin, name):
+        self.default_pool = default_pool
         self.pool = pool
         self.rate = rate
         self.tobin = tobin
@@ -20,12 +20,11 @@ class Env:
 
     def reg_pool(self, target):
         if self.pool < self.default_pool:
-            if (self.pool < self.default_pool):
-                self.pool=self.pool + target
-            else:
+            self.pool=self.pool + target
+            if self.pool > self.default_pool:
                 self.pool=self.default_pool
         elif self.pool > self.default_pool:
-            if (self.pool > self.default_pool):
-                self.pool=self.pool - target
-            else:
+            self.pool=self.pool - target
+            if self.pool < self.default_pool:
                 self.pool=self.default_pool
+        return self.pool
